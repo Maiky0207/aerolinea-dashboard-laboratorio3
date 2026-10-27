@@ -1,0 +1,147 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "37fd4c73-e328-47f0-af12-d523ae3dacbf",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        -48
+      ],
+      "id": "e3e3fbe3-88ed-4c39-be9d-e0430759c77f",
+      "name": "Webhook",
+      "webhookId": "37fd4c73-e328-47f0-af12-d523ae3dacbf"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.body.message }}",
+        "options": {
+          "systemMessage": "Eres un asistente experto en análisis de operaciones de una aerolínea virtual. \n\nTus funciones principales son:\n1. Analizar retrasos operativos según los minutos de demora (DLY) tras la hora programada de salida (STD).\n2. Clasificar los retrasos mediante códigos IATA:\n   - Operaciones (Códigos 41-48): Limpieza, catering, carga.\n   - Técnico (Códigos 41-48): Mantenimiento no programado.\n   - ATC / Clima (Códigos 71-89): Causas externas.\n   - Reaccionario (Códigos 91-96): Impacto en cadena sobre aeronaves y vuelos subsiguientes.\n3. Evaluar el impacto financiero (CASK - Cost per Available Seat Kilometer) debido a compensaciones, hospedaje o cambios de tripulación.\n\nSi el usuario no te proporciona datos suficientes o un archivo de vuelos, explícale cómo categorizas los retrasos (DLY, Códigos IATA y CASK) y solicítale el reporte de Estado de Vuelos o Log Operativo para calcular el mayor retraso y su impacto en la red.\n\nREGLA ESTRICTA DE FORMATO:\n- No utilices asteriscos (*) ni para negritas (**texto**) ni para viñetas o listas (* ítem).\n- Para estructurar la respuesta y hacer listas, utiliza números (1., 2., 3.) o guiones simples (-).\n- Para resaltar títulos o conceptos importantes, utiliza MAYÚSCULAS o escribe el texto directamente de forma clara sin caracteres especiales de formato."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        256,
+        -48
+      ],
+      "id": "78e05c91-7735-4637-98a2-30c7cda58c75",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        224,
+        192
+      ],
+      "id": "ec953ea9-230d-4b7b-9e17-8903ac84a0b1",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "QW9UIfrwQYrZEKkP",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.webhookUrl }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        368,
+        272
+      ],
+      "id": "fe2e4763-06e5-4858-bc4f-ea37415fb7cb",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"response\": {{ JSON.stringify($json.output) }}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        624,
+        -48
+      ],
+      "id": "2c86dc4e-a472-40e7-ad2a-d437d59040d0",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "6c263558-2de0-4ffd-90f4-e581bb57ac91",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b9fa5119ca01be9eeda795de95d6ca6d1922f1aab2bb5d39435ca3fac555856c"
+  },
+  "nodeGroups": [],
+  "id": "Xaq3UtOTzmNRb1z0",
+  "tags": []
+}
